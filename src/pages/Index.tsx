@@ -1,18 +1,84 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TimesheetForm, TimesheetEntry } from "@/components/TimesheetForm";
 import { TimesheetTable } from "@/components/TimesheetTable";
 import { exportToExcel } from "@/utils/excelExport";
 import { useToast } from "@/hooks/use-toast";
-import { Clock } from "lucide-react";
+import { Clock, Calendar } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const [entries, setEntries] = useState<TimesheetEntry[]>([]);
   const [editingEntry, setEditingEntry] = useState<TimesheetEntry | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleSubmitEntry = (entry: TimesheetEntry) => {
+  // Load entries from database on component mount
+  useEffect(() => {
+    const loadEntries = async () => {
+      const { data, error } = await supabase
+        .from('timesheet_entries')
+        .select('*')
+        .order('date', { ascending: false });
+      
+      if (error) {
+        toast({
+          title: "Error Loading Data",
+          description: "Failed to load timesheet entries from database.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      if (data) {
+        const formattedEntries: TimesheetEntry[] = data.map(entry => ({
+          id: entry.id,
+          week: entry.week,
+          date: new Date(entry.date),
+          signIn: entry.sign_in,
+          signOut: entry.sign_out,
+          numberOfBreaks: entry.number_of_breaks.toString(),
+          hoursWorked: parseFloat(entry.hours_worked.toString()),
+          submittedAt: new Date(entry.submitted_at),
+          paidBreakHours: parseFloat(entry.paid_break_hours.toString()),
+          unpaidBreakHours: parseFloat(entry.unpaid_break_hours.toString())
+        }));
+        setEntries(formattedEntries);
+      }
+    };
+    
+    loadEntries();
+  }, [toast]);
+
+  const handleSubmitEntry = async (entry: TimesheetEntry) => {
     if (editingEntry) {
-      // Update existing entry
+      // Update existing entry in database
+      const { error } = await supabase
+        .from('timesheet_entries')
+        .update({
+          week: entry.week,
+          date: entry.date.toISOString().split('T')[0],
+          sign_in: entry.signIn,
+          sign_out: entry.signOut,
+          number_of_breaks: parseInt(entry.numberOfBreaks),
+          hours_worked: entry.hoursWorked,
+          paid_break_hours: entry.paidBreakHours,
+          unpaid_break_hours: entry.unpaidBreakHours
+        })
+        .eq('id', entry.id);
+      
+      if (error) {
+        toast({
+          title: "Update Failed",
+          description: "Failed to update timesheet entry in database.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+      
       setEntries(prev => prev.map(e => e.id === entry.id ? entry : e));
       setEditingEntry(null);
       toast({
@@ -21,8 +87,48 @@ const Index = () => {
         duration: 3000,
       });
     } else {
-      // Add new entry
-      setEntries(prev => [...prev, entry]);
+      // Add new entry to database
+      const { data, error } = await supabase
+        .from('timesheet_entries')
+        .insert({
+          week: entry.week,
+          date: entry.date.toISOString().split('T')[0],
+          sign_in: entry.signIn,
+          sign_out: entry.signOut,
+          number_of_breaks: parseInt(entry.numberOfBreaks),
+          hours_worked: entry.hoursWorked,
+          paid_break_hours: entry.paidBreakHours,
+          unpaid_break_hours: entry.unpaidBreakHours
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        toast({
+          title: "Save Failed",
+          description: "Failed to save timesheet entry to database.",
+          variant: "destructive",
+          duration: 3000,
+        });
+        return;
+      }
+      
+      if (data) {
+        const newEntry: TimesheetEntry = {
+          id: data.id,
+          week: data.week,
+          date: new Date(data.date),
+          signIn: data.sign_in,
+          signOut: data.sign_out,
+          numberOfBreaks: data.number_of_breaks.toString(),
+          hoursWorked: parseFloat(data.hours_worked.toString()),
+          submittedAt: new Date(data.submitted_at),
+          paidBreakHours: parseFloat(data.paid_break_hours.toString()),
+          unpaidBreakHours: parseFloat(data.unpaid_break_hours.toString())
+        };
+        setEntries(prev => [newEntry, ...prev]);
+      }
+      
       toast({
         title: "Timesheet Entry Submitted",
         description: `Successfully recorded ${entry.hoursWorked.toFixed(2)} hours for ${entry.week}`,
@@ -39,7 +145,22 @@ const Index = () => {
     setEditingEntry(null);
   };
 
-  const handleDeleteEntry = (id: string) => {
+  const handleDeleteEntry = async (id: string) => {
+    const { error } = await supabase
+      .from('timesheet_entries')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      toast({
+        title: "Delete Failed",
+        description: "Failed to delete timesheet entry from database.",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+    
     setEntries(prev => prev.filter(e => e.id !== id));
     toast({
       title: "Entry Deleted",
@@ -91,6 +212,14 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">Personal time tracking and pay calculator</p>
               </div>
             </div>
+            <Button 
+              onClick={() => navigate('/history')}
+              variant="outline"
+              className="flex items-center space-x-2"
+            >
+              <Calendar className="h-4 w-4" />
+              <span>View All Entries</span>
+            </Button>
           </div>
         </div>
       </header>

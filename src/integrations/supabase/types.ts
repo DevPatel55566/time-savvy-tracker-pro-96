@@ -14,7 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      timesheet_entries: {
+        Row: {
+          created_at: string
+          date: string
+          hours_worked: number
+          id: string
+          number_of_breaks: number
+          paid_break_hours: number
+          sign_in: string
+          sign_out: string
+          submitted_at: string
+          unpaid_break_hours: number
+          updated_at: string
+          user_id: string | null
+          week: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          hours_worked: number
+          id?: string
+          number_of_breaks?: number
+          paid_break_hours?: number
+          sign_in: string
+          sign_out: string
+          submitted_at?: string
+          unpaid_break_hours?: number
+          updated_at?: string
+          user_id?: string | null
+          week: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          hours_worked?: number
+          id?: string
+          number_of_breaks?: number
+          paid_break_hours?: number
+          sign_in?: string
+          sign_out?: string
+          submitted_at?: string
+          unpaid_break_hours?: number
+          updated_at?: string
+          user_id?: string | null
+          week?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
