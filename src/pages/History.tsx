@@ -20,7 +20,7 @@ const History = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const ADMIN_PASSWORD = "admin123"; // Simple password protection
+  const ADMIN_PASSWORD = "pat05052005"; // Simple password protection
 
   // Load entries from database on component mount
   useEffect(() => {
