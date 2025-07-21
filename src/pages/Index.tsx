@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { TimesheetForm, TimesheetEntry } from "@/components/TimesheetForm";
-import { TimesheetTable } from "@/components/TimesheetTable";
 import { exportToExcel } from "@/utils/excelExport";
 import { useToast } from "@/hooks/use-toast";
 import { Clock, Calendar } from "lucide-react";
@@ -137,64 +136,8 @@ const Index = () => {
     }
   };
 
-  const handleEditEntry = (entry: TimesheetEntry) => {
-    setEditingEntry(entry);
-  };
-
   const handleCancelEdit = () => {
     setEditingEntry(null);
-  };
-
-  const handleDeleteEntry = async (id: string) => {
-    const { error } = await supabase
-      .from('timesheet_entries')
-      .delete()
-      .eq('id', id);
-    
-    if (error) {
-      toast({
-        title: "Delete Failed",
-        description: "Failed to delete timesheet entry from database.",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-    
-    setEntries(prev => prev.filter(e => e.id !== id));
-    toast({
-      title: "Entry Deleted",
-      description: "Timesheet entry has been removed",
-      duration: 3000,
-    });
-  };
-
-  const handleExportToExcel = () => {
-    if (entries.length === 0) {
-      toast({
-        title: "No Data to Export",
-        description: "Please submit at least one timesheet entry before exporting.",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-
-    try {
-      const filename = exportToExcel(entries);
-      toast({
-        title: "Excel Export Successful",
-        description: `Timesheet data exported to ${filename}`,
-        duration: 4000,
-      });
-    } catch (error) {
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting your timesheet data.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
   };
 
   return (
@@ -235,15 +178,6 @@ const Index = () => {
           />
         </section>
 
-        {/* Timesheet Table */}
-        <section>
-          <TimesheetTable 
-            entries={entries} 
-            onExportToExcel={handleExportToExcel}
-            onEditEntry={handleEditEntry}
-            onDeleteEntry={handleDeleteEntry}
-          />
-        </section>
       </main>
 
       {/* Footer */}
