@@ -152,7 +152,7 @@ const Index = () => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">My Timesheet</h1>
-                <p className="text-sm text-muted-foreground">Personal time tracking and pay calculator</p>
+                <p className="text-sm text-muted-foreground">Personal time tracking</p>
               </div>
             </div>
             <Button 
@@ -185,7 +185,7 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              © 2024 Personal Timesheet. Rate: $17.50/hour
+              © 2024 Personal Timesheet
             </div>
             <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
               Break policy: First break (30min) is paid • Additional breaks are unpaid

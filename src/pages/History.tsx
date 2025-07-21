@@ -134,7 +134,6 @@ const History = () => {
   };
 
   const totalHours = entries.reduce((sum, entry) => sum + entry.hoursWorked, 0);
-  const weeklyPay = totalHours * 17.5;
 
   // Password protection screen
   if (!isAuthenticated) {
@@ -213,9 +212,6 @@ const History = () => {
               <Badge variant="secondary" className="text-sm">
                 Total: {totalHours.toFixed(2)} hours
               </Badge>
-              <Badge variant="default" className="text-sm">
-                Pay: ${weeklyPay.toFixed(2)}
-              </Badge>
               <Button onClick={handleExportToExcel} variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export to Excel
@@ -247,7 +243,7 @@ const History = () => {
                 <div>
                   <CardTitle className="text-xl">All Timesheet Entries</CardTitle>
                   <CardDescription>
-                    Complete history of your work hours and payments
+                    Complete history of your work hours
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -268,39 +264,34 @@ const History = () => {
                       <TableHead>Sign Out</TableHead>
                       <TableHead>Breaks</TableHead>
                       <TableHead>Hours Worked</TableHead>
-                      <TableHead>Pay</TableHead>
                       <TableHead>Submitted</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {entries.map((entry) => {
-                      const pay = entry.hoursWorked * 17.5;
-                      return (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.week}</TableCell>
-                          <TableCell>{entry.date.toLocaleDateString()}</TableCell>
-                          <TableCell>{entry.signIn}</TableCell>
-                          <TableCell>{entry.signOut}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="text-sm">{entry.numberOfBreaks} break(s)</div>
-                              <div className="text-xs text-muted-foreground">
-                                Paid: {entry.paidBreakHours.toFixed(2)}h | 
-                                Unpaid: {entry.unpaidBreakHours.toFixed(2)}h
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {entry.hoursWorked.toFixed(2)} hours
-                          </TableCell>
-                          <TableCell className="font-medium text-green-600">
-                            ${pay.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {entry.submittedAt.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">
+                     {entries.map((entry) => {
+                       return (
+                         <TableRow key={entry.id}>
+                           <TableCell className="font-medium">{entry.week}</TableCell>
+                           <TableCell>{entry.date.toLocaleDateString()}</TableCell>
+                           <TableCell>{entry.signIn}</TableCell>
+                           <TableCell>{entry.signOut}</TableCell>
+                           <TableCell>
+                             <div className="space-y-1">
+                               <div className="text-sm">{entry.numberOfBreaks} break(s)</div>
+                               <div className="text-xs text-muted-foreground">
+                                 Paid: {entry.paidBreakHours.toFixed(2)}h | 
+                                 Unpaid: {entry.unpaidBreakHours.toFixed(2)}h
+                               </div>
+                             </div>
+                           </TableCell>
+                           <TableCell className="font-medium">
+                             {entry.hoursWorked.toFixed(2)} hours
+                           </TableCell>
+                           <TableCell className="text-sm text-muted-foreground">
+                             {entry.submittedAt.toLocaleString()}
+                           </TableCell>
+                           <TableCell className="text-right">
                             <div className="flex items-center justify-end space-x-2">
                               <Button
                                 size="sm"
@@ -348,7 +339,7 @@ const History = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              © 2024 Personal Timesheet. Rate: $17.50/hour
+              © 2024 Personal Timesheet
             </div>
             <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
               Break policy: First break (30min) is paid • Additional breaks are unpaid
