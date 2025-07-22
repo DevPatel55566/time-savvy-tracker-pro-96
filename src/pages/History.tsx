@@ -2,20 +2,25 @@ import { useState, useEffect } from "react";
 import { TimesheetEntry } from "@/components/TimesheetForm";
 import { exportToExcel } from "@/utils/excelExport";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, ArrowLeft, Download, Edit, Trash2 } from "lucide-react";
+import { Clock, ArrowLeft, Download, Edit, Trash2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 const History = () => {
   const [entries, setEntries] = useState<TimesheetEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [password, setPassword] = useState("");
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  const ADMIN_PASSWORD = "pat05052005"; // Simple password protection
 
   // Load entries from database on component mount
   useEffect(() => {
@@ -24,7 +29,7 @@ const History = () => {
       const { data, error } = await supabase
         .from('timesheet_entries')
         .select('*')
-        .order('date', { ascending: false });
+        .order('week', { ascending: true });
       
       if (error) {
         toast({
@@ -110,8 +115,64 @@ const History = () => {
     }
   };
 
+  const handlePasswordSubmit = () => {
+    if (password === ADMIN_PASSWORD) {
+      setIsAuthenticated(true);
+      toast({
+        title: "Access Granted",
+        description: "Welcome to the timesheet history.",
+        duration: 3000,
+      });
+    } else {
+      toast({
+        title: "Access Denied",
+        description: "Incorrect password. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    }
+  };
+
   const totalHours = entries.reduce((sum, entry) => sum + entry.hoursWorked, 0);
-  const weeklyPay = totalHours * 17.5;
+
+  // Password protection screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="bg-primary rounded-lg p-3 w-fit mx-auto mb-4">
+              <Lock className="h-8 w-8 text-primary-foreground" />
+            </div>
+            <CardTitle className="text-2xl">Protected Access</CardTitle>
+            <CardDescription>
+              Please enter the password to view timesheet history
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Input
+                type="password"
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button onClick={handlePasswordSubmit} className="flex-1">
+                Access History
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/')}>
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -151,9 +212,6 @@ const History = () => {
               <Badge variant="secondary" className="text-sm">
                 Total: {totalHours.toFixed(2)} hours
               </Badge>
-              <Badge variant="default" className="text-sm">
-                Pay: ${weeklyPay.toFixed(2)}
-              </Badge>
               <Button onClick={handleExportToExcel} variant="outline">
                 <Download className="h-4 w-4 mr-2" />
                 Export to Excel
@@ -185,7 +243,7 @@ const History = () => {
                 <div>
                   <CardTitle className="text-xl">All Timesheet Entries</CardTitle>
                   <CardDescription>
-                    Complete history of your work hours and payments
+                    Complete history of your work hours
                   </CardDescription>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -206,39 +264,34 @@ const History = () => {
                       <TableHead>Sign Out</TableHead>
                       <TableHead>Breaks</TableHead>
                       <TableHead>Hours Worked</TableHead>
-                      <TableHead>Pay</TableHead>
                       <TableHead>Submitted</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {entries.map((entry) => {
-                      const pay = entry.hoursWorked * 17.5;
-                      return (
-                        <TableRow key={entry.id}>
-                          <TableCell className="font-medium">{entry.week}</TableCell>
-                          <TableCell>{entry.date.toLocaleDateString()}</TableCell>
-                          <TableCell>{entry.signIn}</TableCell>
-                          <TableCell>{entry.signOut}</TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <div className="text-sm">{entry.numberOfBreaks} break(s)</div>
-                              <div className="text-xs text-muted-foreground">
-                                Paid: {entry.paidBreakHours.toFixed(2)}h | 
-                                Unpaid: {entry.unpaidBreakHours.toFixed(2)}h
-                              </div>
-                            </div>
-                          </TableCell>
-                          <TableCell className="font-medium">
-                            {entry.hoursWorked.toFixed(2)} hours
-                          </TableCell>
-                          <TableCell className="font-medium text-green-600">
-                            ${pay.toFixed(2)}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {entry.submittedAt.toLocaleString()}
-                          </TableCell>
-                          <TableCell className="text-right">
+                     {entries.map((entry) => {
+                       return (
+                         <TableRow key={entry.id}>
+                           <TableCell className="font-medium">{entry.week}</TableCell>
+                           <TableCell>{entry.date.toLocaleDateString()}</TableCell>
+                           <TableCell>{entry.signIn}</TableCell>
+                           <TableCell>{entry.signOut}</TableCell>
+                           <TableCell>
+                             <div className="space-y-1">
+                               <div className="text-sm">{entry.numberOfBreaks} break(s)</div>
+                               <div className="text-xs text-muted-foreground">
+                                 Paid: {entry.paidBreakHours.toFixed(2)}h | 
+                                 Unpaid: {entry.unpaidBreakHours.toFixed(2)}h
+                               </div>
+                             </div>
+                           </TableCell>
+                           <TableCell className="font-medium">
+                             {entry.hoursWorked.toFixed(2)} hours
+                           </TableCell>
+                           <TableCell className="text-sm text-muted-foreground">
+                             {entry.submittedAt.toLocaleString()}
+                           </TableCell>
+                           <TableCell className="text-right">
                             <div className="flex items-center justify-end space-x-2">
                               <Button
                                 size="sm"
@@ -286,7 +339,7 @@ const History = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              © 2024 Personal Timesheet. Rate: $17.50/hour
+              © 2025 Personal Timesheet
             </div>
             <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
               Break policy: First break (30min) is paid • Additional breaks are unpaid
