@@ -185,7 +185,11 @@ const Index = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
+<<<<<<< HEAD
               © 2025 Personal Timesheet
+=======
+              © 2024 Personal Timesheet
+>>>>>>> 62915f28143369231271964c4501de117a8da4c3
             </div>
             <div className="text-sm text-muted-foreground mt-2 sm:mt-0">
               Break policy: First break (30min) is paid • Additional breaks are unpaid
